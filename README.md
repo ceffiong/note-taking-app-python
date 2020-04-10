@@ -1,5 +1,5 @@
 # note-taking-app-python
-This repo contains source codes for a note-taking application developed in Python. A demo of the running app can be seen here: https://youtu.be/qWHAvUGb8d4
+This repo contains source codes for a note-taking application developed in Python. The tutorial can be find here: https://medium.com/@ceffiong/build-a-note-taking-app-with-mysql-backend-in-python-927b4c5fad91?sk=a57e187ba5d8275d8fef32670f9f461d and A demo of the running app can be seen here: https://youtu.be/qWHAvUGb8d4
 
 
 To start the app:
