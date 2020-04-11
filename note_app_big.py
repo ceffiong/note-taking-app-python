@@ -16,7 +16,6 @@ def onselect(evt):
     index = int(w.curselection()[0])
     value = w.get(index)
     selected_index = index
-
     display_note(index, value)
 
 # GUI CODES
@@ -73,118 +72,80 @@ button_frame.pack(side=tk.TOP)
 top_left.pack(side=tk.LEFT)
 top_right.pack(side=tk.RIGHT)
 
-# Database functions
-
-conn = mysql.connector.connect(
-  host="localhost",
-  port=3306,
-  user="root",
-  passwd=""
-)
+# DATABASE FUNCTIONS STARTS
+conn = mysql.connector.connect(host="localhost", port=3306, user="root", passwd="")
 
 
 def db_create_db(conn):
     mycursor = conn.cursor()
-    mycursor.execute("CREATE DATABASE IF NOT EXISTS db_notes")
+    query = "CREATE DATABASE IF NOT EXISTS db_notes"
+    mycursor.execute(query)
 
 
 def db_create_table(conn):
     db_create_db(conn)
     conn.database = "db_notes"
     mycursor = conn.cursor()
-    sql = "CREATE TABLE IF NOT EXISTS tb_notes (" \
+    query = "CREATE TABLE IF NOT EXISTS tb_notes (" \
           "note_id INT AUTO_INCREMENT PRIMARY KEY, " \
           "title VARCHAR(255) NOT NULL, " \
           "note VARCHAR(2000) NOT NULL)"
-    mycursor.execute(sql)
-
-
-def db_insert_demo_notes(conn):
-    conn.database = "db_notes"
-    mycursor = conn.cursor()
-    sql = "INSERT INTO tb_notes (title, note) VALUES (%s, %s)"
-    val = [
-        ('My first title', 'This is my first awesome note'),
-        ('My second title', 'This is my second awesome note'),
-        ('My third title', 'This is my third awesome note'),
-        ('My fourth title', 'This is my fourth awesome note'),
-        ('My fifth title', 'This is my fifth awesome note')
-    ]
-    mycursor.executemany(sql, val)
-    conn.commit()
-
-
-def db_select_all(conn):
-    conn.database = "db_notes"
-    sql = "SELECT * from tb_notes"
-    mycursor = conn.cursor()
-    mycursor.execute(sql)
-    return mycursor.fetchall()
-
-
-def db_get_note_from_id(conn, note_id):
-    mycursor = conn.cursor()
-    mycursor.execute("SELECT title, note FROM tb_notes WHERE note_id = " + str(note_id))
-    myresult = mycursor.fetchone()
-
-    return myresult
+    mycursor.execute(query)
 
 
 def db_insert_note(conn, title, note):
+    conn.database = "db_notes"
     mycursor = conn.cursor()
-    sql = "INSERT INTO tb_notes (title, note) VALUES (%s, %s)"
+    query = "INSERT INTO tb_notes (title, note) VALUES (%s, %s)"
     val = (title, note)
-    mycursor.execute(sql, val)
+    mycursor.execute(query, val)
     conn.commit()
-
     return mycursor.lastrowid
 
 
-def db_update_note(conn, title, note, note_id):
+def db_select_all_notes(conn):
+    conn.database = "db_notes"
+    query = "SELECT * from tb_notes"
     mycursor = conn.cursor()
+    mycursor.execute(query)
+    return mycursor.fetchall()
 
-    sql = "UPDATE tb_notes SET title = %s, note = %s WHERE note_id = %s"
+
+def db_select_specific_note(conn, note_id):
+    conn.database = "db_notes"
+    mycursor = conn.cursor()
+    mycursor.execute("SELECT title, note FROM tb_notes WHERE note_id = " + str(note_id))
+    return mycursor.fetchone()
+
+
+def db_update_note(conn, title, note, note_id):
+    conn.database = "db_notes"
+    mycursor = conn.cursor()
+    query = "UPDATE tb_notes SET title = %s, note = %s WHERE note_id = %s"
     val = (title, note, note_id)
-    mycursor.execute(sql, val)
+    mycursor.execute(query, val)
     conn.commit()
 
 
 def db_delete_note(conn, note_id):
+    conn.database = "db_notes"
     mycursor = conn.cursor()
-    sql = "DELETE FROM tb_notes WHERE note_id = %s"
+    query = "DELETE FROM tb_notes WHERE note_id = %s"
     adr = (note_id,)
-    mycursor.execute(sql, adr)
+    mycursor.execute(query, adr)
     conn.commit()
 
 
-def limit_title_length(title):
-    result = ""
-    if len(title) > 30:
-        result = title[:28] + "..."
-    else:
-        result = title
-    return result
-
-
-def init(db_conn):
-    global notes_ids
-
-    # create database if not exist
-    db_create_db(conn)
-
-    # create table if not exist
-    db_create_table(conn)
-
-    # insert data into data
-    #db_insert_demo_notes(conn)
+def init(conn):
+    db_create_db(conn)  # create database if not exist
+    db_create_table(conn)  # create table if not exist
 
     # select data
-    notes = db_select_all(db_conn)
+    notes = db_select_all_notes(conn)
 
     for note in notes:
         list_notes.insert(tk.END, note[1])
-        notes_ids.append(note[0]) # save the id
-
+        notes_ids.append(note[0])  # save the id
 
 init(conn)
 
@@ -287,7 +248,7 @@ def display_note(index, value):
     note_title.delete(0, tk.END)
     note_text.delete('1.0', tk.END)
 
-    note = db_get_note_from_id(conn, notes_ids[index])
+    note = db_select_specific_note(conn, notes_ids[index])
 
     # insert data
     note_title.insert(tk.END, note[0])
